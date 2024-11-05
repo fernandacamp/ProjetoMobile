@@ -4,6 +4,7 @@ import 'package:projeto_mobile/settings/assets.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:projeto_mobile/settings/routes.dart';
 
 class NewTripPage extends StatefulWidget {
   const NewTripPage({super.key});
@@ -13,10 +14,9 @@ class NewTripPage extends StatefulWidget {
 }
 
 class _NewTripPageState extends State<NewTripPage> {
-  final TextEditingController _departureDateController =
-      TextEditingController();
-  final TextEditingController _departureTimeController =
-      TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _departureDateController = TextEditingController();
+  final TextEditingController _departureTimeController = TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _nomeTutorController = TextEditingController();
   final TextEditingController _especieController = TextEditingController();
@@ -28,7 +28,6 @@ class _NewTripPageState extends State<NewTripPage> {
   final TextEditingController _ufController = TextEditingController();
 
   String? serviceSelected;
-
   Map<String, String> services = {
     "Hospedagem": AppAssets.hotelIcon,
     "Transporte": AppAssets.carIcon,
@@ -39,12 +38,11 @@ class _NewTripPageState extends State<NewTripPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(
-          color: AppColors.menuTextColor,
+        leading: BackButton(color: AppColors.menuTextColor),
+        title: Text(
+          'Home',
+          style: AppFonts.defaultLarger.copyWith(color: AppColors.menuTextColor),
         ),
-        title: Text('Home',
-            style: AppFonts.defaultLarger
-                .copyWith(color: AppColors.menuTextColor)),
         centerTitle: true,
         backgroundColor: AppColors.backgroundColor,
       ),
@@ -52,289 +50,300 @@ class _NewTripPageState extends State<NewTripPage> {
         padding: const EdgeInsets.all(20.0),
         child: ElevatedButton(
           onPressed: () {
-            // Ação para buscar passagens ou processar dados
+            if (_formKey.currentState!.validate()) {
+              _showConfirmationDialog(context);
+            }
           },
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
             backgroundColor: AppColors.backgroundColor,
           ),
-          child: Text('Adicionar Viagem',
-              style: AppFonts.defaultRegular.copyWith(
-                color: AppColors.menuTextColor,
-              )),
+          child: Text(
+            'Adicionar Viagem',
+            style: AppFonts.defaultRegular.copyWith(
+              color: AppColors.menuTextColor,
+            ),
+          ),
         ),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Campo para escolher a data de ida
-              LayoutBuilder(builder: (context, constrains) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: constrains.maxWidth / 2 - 10,
-                      child: TextFormField(
-                        controller: _departureDateController,
-                        decoration: InputDecoration(
-                          labelText: 'Data ',
-                          labelStyle: AppFonts.boldLarge
-                              .copyWith(color: AppColors.textColor),
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        readOnly: true,
-                        onTap: () async {
-                          final pickedDate = await _selectDate(context);
-                          if (pickedDate != null) {
-                            setState(() {
-                              _departureDateController.text = pickedDate;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: constrains.maxWidth / 2 - 10,
-                      child: TextFormField(
-                        controller: _departureTimeController,
-                        decoration: InputDecoration(
-                          labelText: 'Horário ',
-                          labelStyle: AppFonts.boldLarge
-                              .copyWith(color: AppColors.textColor),
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        readOnly: true,
-                        onTap: () async {
-                          final pickedTime = await _selectTime(
-                              context); // Chama a função de seleção de hora
-                          if (pickedTime != null) {
-                            setState(() {
-                              _departureDateController.text =
-                                  pickedTime; // Atualiza com o horário formatado
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              }),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                controller: _nomeController,
-                decoration: InputDecoration(
-                  labelText: 'Nome do Pet ',
-                  labelStyle:
-                      AppFonts.boldLarge.copyWith(color: AppColors.textColor),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                controller: _nomeTutorController,
-                decoration: InputDecoration(
-                  labelText: 'Nome do Tutor ',
-                  labelStyle:
-                      AppFonts.boldLarge.copyWith(color: AppColors.textColor),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                controller: _especieController,
-                decoration: InputDecoration(
-                  labelText: 'Especíe ',
-                  labelStyle:
-                      AppFonts.boldLarge.copyWith(color: AppColors.textColor),
-                ),
-              ),
-
-              const SizedBox(
-                height: 20,
-              ),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: services.entries
-                    .map((x) => GestureDetector(
-                          onTap: () => setState(() => serviceSelected = x.key),
-                          child: Container(
-                            alignment: Alignment.center,
-                            width: 80,
-                            height: 60,
-                            decoration: BoxDecoration(
-                                color: serviceSelected == x.key
-                                    ? AppColors.backgroundColor.withOpacity(0.6)
-                                    : Colors.transparent,
-                                border: serviceSelected == x.key
-                                    ? Border.all(
-                                        color: AppColors.backgroundColor)
-                                    : null,
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SvgPicture.asset(
-                                  x.value,
-                                  color: serviceSelected == x.key
-                                      ? AppColors.menuTextColor
-                                      : AppColors.textColor,
-                                ),
-                                const SizedBox(
-                                  height: 5,
-                                ),
-                                Text(x.key,
-                                    style: AppFonts.defaultaSmall.copyWith(
-                                      color: serviceSelected == x.key
-                                          ? AppColors.menuTextColor
-                                          : AppColors.textColor,
-                                    ))
-                              ],
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Campo para escolher a data de ida
+                LayoutBuilder(
+                  builder: (context, constrains) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(
+                          width: constrains.maxWidth / 2 - 10,
+                          child: TextFormField(
+                            controller: _departureDateController,
+                            decoration: InputDecoration(
+                              labelText: 'Data',
+                              labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+                              prefixIcon: Icon(Icons.calendar_today),
                             ),
+                            readOnly: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'A data é obrigatória';
+                              }
+                              return null;
+                            },
+                            onTap: () async {
+                              final pickedDate = await _selectDate(context);
+                              if (pickedDate != null) {
+                                setState(() {
+                                  _departureDateController.text = pickedDate;
+                                });
+                              }
+                            },
                           ),
-                        ))
-                    .toList(),
-              ),
-
-              const SizedBox(
-                height: 20,
-              ),
-
-              TextFormField(
-                controller: _cepController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'CEP',
-                  labelStyle:
-                      AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+                        ),
+                        SizedBox(
+                          width: constrains.maxWidth / 2 - 10,
+                          child: TextFormField(
+                            controller: _departureTimeController,
+                            decoration: InputDecoration(
+                              labelText: 'Horário',
+                              labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+                              prefixIcon: Icon(Icons.access_time),
+                            ),
+                            readOnly: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'O horário é obrigatório';
+                              }
+                              return null;
+                            },
+                            onTap: () async {
+                              final pickedTime = await _selectTime(context);
+                              if (pickedTime != null) {
+                                setState(() {
+                                  _departureTimeController.text = pickedTime;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-              ),
-
-              const SizedBox(
-                height: 20,
-              ),
-
-              TextFormField(
-                controller: _addressController,
-                decoration: InputDecoration(
-                  labelText: 'Endereço',
-                  labelStyle:
-                      AppFonts.boldLarge.copyWith(color: AppColors.greyColor),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  controller: _nomeController,
+                  label: 'Nome do Pet',
+                  validatorMessage: 'O nome do pet é obrigatório',
                 ),
-                enabled: false,
-              ),
-
-              const SizedBox(
-                height: 20,
-              ),
-
-              LayoutBuilder(builder: (context, contrains) {
-                return Row(
+                const SizedBox(height: 20),
+                _buildTextField(
+                  controller: _nomeTutorController,
+                  label: 'Nome do Tutor',
+                  validatorMessage: 'O nome do tutor é obrigatório',
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  controller: _especieController,
+                  label: 'Espécie',
+                  validatorMessage: 'A espécie é obrigatória',
+                ),
+                const SizedBox(height: 20),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: contrains.maxWidth * 1 / 4 - 10,
-                      child: TextFormField(
-                        controller: _numberController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: 'Numero',
-                          labelStyle: AppFonts.boldLarge
-                              .copyWith(color: AppColors.textColor),
+                  children: services.entries.map((x) {
+                    return GestureDetector(
+                      onTap: () => setState(() => serviceSelected = x.key),
+                      child: Container(
+                        alignment: Alignment.center,
+                        width: 80,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: serviceSelected == x.key
+                              ? AppColors.backgroundColor.withOpacity(0.6)
+                              : Colors.transparent,
+                          border: serviceSelected == x.key
+                              ? Border.all(color: AppColors.backgroundColor)
+                              : null,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgPicture.asset(
+                              x.value,
+                              color: serviceSelected == x.key
+                                  ? AppColors.menuTextColor
+                                  : AppColors.textColor,
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              x.key,
+                              style: AppFonts.defaultaSmall.copyWith(
+                                color: serviceSelected == x.key
+                                    ? AppColors.menuTextColor
+                                    : AppColors.textColor,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      width: contrains.maxWidth * 3 / 4 - 10,
-                      child: TextFormField(
-                        controller: _compController,
-                        decoration: InputDecoration(
-                          labelText: 'Complemento',
-                          labelStyle: AppFonts.boldLarge
-                              .copyWith(color: AppColors.textColor),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  controller: _cepController,
+                  label: 'CEP',
+                  keyboardType: TextInputType.number,
+                  validatorMessage: 'O CEP é obrigatório',
+                ),
+                const SizedBox(height: 20),
+                _buildDisabledTextField(
+                  controller: _addressController,
+                  label: 'Endereço',
+                ),
+                const SizedBox(height: 20),
+                LayoutBuilder(builder: (context, constrains) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: constrains.maxWidth * 1 / 4 - 10,
+                        child: _buildTextField(
+                          controller: _numberController,
+                          label: 'Número',
+                          keyboardType: TextInputType.number,
+                          validatorMessage: 'O número é obrigatório',
                         ),
                       ),
-                    ),
-                  ],
-                );
-              }),
-
-              const SizedBox(
-                height: 20,
-              ),
-
-              LayoutBuilder(builder: (context, contrains) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: contrains.maxWidth * 3 / 4 - 10,
-                      child: TextFormField(
-                        controller: _cityController,
-                        decoration: InputDecoration(
-                          labelText: 'Cidade',
-                          labelStyle: AppFonts.boldLarge
-                              .copyWith(color: AppColors.greyColor),
+                      SizedBox(
+                        width: constrains.maxWidth * 3 / 4 - 10,
+                        child: TextFormField(
+                          controller: _compController,
+                          decoration: InputDecoration(
+                            labelText: 'Complemento',
+                            labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+                          ),
                         ),
-                        enabled: false,
                       ),
-                    ),
-                    SizedBox(
-                      width: contrains.maxWidth * 1 / 4 - 10,
-                      child: TextFormField(
-                        controller: _ufController,
-                        decoration: InputDecoration(
-                          labelText: 'UF',
-                          labelStyle: AppFonts.boldLarge
-                              .copyWith(color: AppColors.greyColor),
+                    ],
+                  );
+                }),
+                const SizedBox(height: 20),
+                LayoutBuilder(builder: (context, constrains) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: constrains.maxWidth * 3 / 4 - 10,
+                        child: _buildDisabledTextField(
+                          controller: _cityController,
+                          label: 'Cidade',
                         ),
-                        enabled: false,
                       ),
-                    ),
-                  ],
-                );
-              }),
-            ],
+                      SizedBox(
+                        width: constrains.maxWidth * 1 / 4 - 10,
+                        child: _buildDisabledTextField(
+                          controller: _ufController,
+                          label: 'UF',
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Função para selecionar data
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType? keyboardType,
+    required String validatorMessage,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+      ),
+      keyboardType: keyboardType,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return validatorMessage;
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildDisabledTextField({
+    required TextEditingController controller,
+    required String label,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+      ),
+      enabled: false,
+    );
+  }
+
   Future<String?> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2101),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      return '${picked.day}/${picked.month}/${picked.year}';
+    if (selectedDate != null) {
+      return DateFormat('dd/MM/yyyy').format(selectedDate);
     }
     return null;
   }
-}
 
-Future<String?> _selectTime(BuildContext context) async {
-  final TimeOfDay? pickedTime = await showTimePicker(
-    context: context,
-    initialTime: TimeOfDay.now(),
-  );
-  if (pickedTime != null) {
-    // Formata o horário para o formato HH:mm
-    final now = DateTime.now();
-    final pickedDateTime = DateTime(
-        now.year, now.month, now.day, pickedTime.hour, pickedTime.minute);
-    final formattedTime = DateFormat('HH:mm').format(pickedDateTime);
-    return formattedTime;
+  Future<String?> _selectTime(BuildContext context) async {
+    TimeOfDay? selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (selectedTime != null) {
+      return selectedTime.format(context);
+    }
+    return null;
   }
-  return null;
+
+  void _showConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmação'),
+          content: Text('Viagem adicionada com sucesso!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed(AppRoutes.orderHistory);
+              },
+              child: Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

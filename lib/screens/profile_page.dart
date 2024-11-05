@@ -57,16 +57,6 @@ class ProfilePage extends StatelessWidget {
                 Navigator.of(context).pushReplacementNamed(AppRoutes.login);
               },
             ),
-            ListTile(
-              leading: Icon(Icons.warning_amber_rounded, color: Colors.red),
-              title: Text(
-                'Desativar conta',
-                style: TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                // Ação para Desativar conta
-              },
-            ),
           ],
         ),
       ),
