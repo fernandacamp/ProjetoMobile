@@ -18,7 +18,7 @@ Para instalar o Flutter, siga as instruções em [flutter.dev](https://flutter.d
 ## Como Executar o Projeto
 1. Clone o repositório do projeto do GitHub:
 
-`git clone https://github.com/seu-usuario/ProjetoMobile.git`
+`git clone https://github.com/fernandacamp/ProjetoMobile.git`
 
 2. Navegue até o diretório do projeto:
 
