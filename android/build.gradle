@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.application'
+        classpath 'com.google.gms:google-services:4.4.2' 
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -5,10 +16,15 @@ allprojects {
     }
 }
 
+dependencies {
+    classpath 'com.google.gms:google-services:4.4.2' // Isso está no buildscript também
+}
+
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
