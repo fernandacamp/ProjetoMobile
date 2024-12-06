@@ -16,172 +16,207 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final GlobalKey<FormState> _key = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _acceptedTerms = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      body: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Container(
-            alignment: Alignment.center,
-            height: 200,
-            child: Image.asset(
-              AppAssets.logoImage,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              alignment: Alignment.center,
+              height: 200,
+              child: Image.asset(AppAssets.logoImage),
             ),
-          ),
-          Container(
-            height: MediaQuery.of(context).size.height - 200,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+            Container(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - 200,
               ),
-            ),
-            padding: const EdgeInsets.all(30),
-            child: Form(
-              key: _key,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Cadastre-se",
-                    style: AppFonts.boldLarge.copyWith(
-                      color: AppColors.backgroundColor,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Preencha seu nome';
-                      }
-                      return null;
-                    },
-                    controller: _userNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Nome Completo',
-                      labelStyle: AppFonts.boldRegular.copyWith(
-                        color: AppColors.greyColor,
-                      ),
-                      border: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              padding: const EdgeInsets.all(30),
+              child: Form(
+                key: _key,
+                child: Column(
+                  children: [
+                    Text(
+                      "Cadastre-se",
+                      style: AppFonts.boldLarge.copyWith(
+                        color: AppColors.backgroundColor,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Preencha seu email';
-                      }
-                      if (!ValidatorHelper.validateEmail(value)) {
-                        return 'Email inválido';
-                      }
-                      return null;
-                    },
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      labelStyle: AppFonts.boldRegular.copyWith(
-                        color: AppColors.greyColor,
-                      ),
-                      border: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Preencha sua senha';
-                      }
-                      if (value.length < 8) {
-                        return 'Senha deve ter mais que 8 caracteres';
-                      }
-                      return null;
-                    },
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      labelStyle: AppFonts.boldRegular.copyWith(
-                        color: AppColors.greyColor,
-                      ),
-                      border: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                    const SizedBox(height: 20),
+                    // Nome Completo
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Preencha seu nome';
+                        }
+                        if (value.length < 3) {
+                          return 'Nome deve ter pelo menos 3 caracteres';
+                        }
+                        return null;
+                      },
+                      controller: _userNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nome Completo',
+                        labelStyle: AppFonts.boldRegular.copyWith(
                           color: AppColors.greyColor,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        border: const UnderlineInputBorder(),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
+                    const SizedBox(height: 20),
+                    // Email
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Preencha seu email';
+                        }
+                        if (!ValidatorHelper.validateEmail(value)) {
+                          return 'Email inválido';
+                        }
+                        return null;
+                      },
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle: AppFonts.boldRegular.copyWith(
+                          color: AppColors.greyColor,
                         ),
-                        child: Text('Voltar'),
+                        border: const UnderlineInputBorder(),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_key.currentState!.validate()) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Cadastro realizado com sucesso!'),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 20),
+                    // Senha
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Preencha sua senha';
+                        }
+                        if (value.length < 8) {
+                          return 'Senha deve ter mais que 8 caracteres';
+                        }
+                        return null;
+                      },
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Senha',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: AppColors.greyColor,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Confirmar Senha
+                    TextFormField(
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Confirme sua senha';
+                        }
+                        if (value != _passwordController.text) {
+                          return 'As senhas não coincidem';
+                        }
+                        return null;
+                      },
+                      controller: _confirmPasswordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Confirmar Senha',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Aceitar Termos
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _acceptedTerms,
+                          onChanged: (value) {
+                            setState(() {
+                              _acceptedTerms = value ?? false;
+                            });
+                          },
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Exibir os termos de uso
+                            },
+                            child: Text(
+                              "Concordo com os Termos de Uso e Política de Privacidade",
+                              style: AppFonts.boldSmall.copyWith(
+                                color: AppColors.greyColor,
                               ),
-                            );
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.backgroundColor,
-                          foregroundColor: AppColors.menuTextColor,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
+                            ),
+                          ),
                         ),
-                        child: Text('Cadastre-se'),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Voltar'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (!_acceptedTerms) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Você precisa aceitar os Termos de Uso',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            if (_key.currentState!.validate()) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('Cadastro realizado com sucesso!'),
+                                ),
+                              );
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          child: const Text('Cadastre-se'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

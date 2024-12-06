@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; 
 import 'package:projeto_mobile/settings/assets.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/fonts.dart';
@@ -15,9 +16,54 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
   final GlobalKey<FormState> _key = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _isLoading = false; 
+
+  Future<void> _login() async {
+    if (!_key.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      Navigator.of(context).pushReplacementNamed(AppRoutes.menu); // Navegação ao menu
+    } on FirebaseAuthException catch (e) {
+      String message = 'Ocorreu um erro. Tente novamente.';
+      if (e.code == 'user-not-found') {
+        message = 'Usuário não encontrado.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Senha incorreta.';
+      }
+      _showErrorDialog(message);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Exibir mensagem de erro
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Erro'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
           Container(
             height: MediaQuery.of(context).size.height - 200,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
@@ -70,12 +116,8 @@ class _LoginPageState extends State<LoginPage> {
                       labelStyle: AppFonts.boldRegular.copyWith(
                         color: AppColors.greyColor,
                       ),
-                      border: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
+                      border: const UnderlineInputBorder(),
+                      focusedBorder: const UnderlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -96,12 +138,8 @@ class _LoginPageState extends State<LoginPage> {
                       labelStyle: AppFonts.boldRegular.copyWith(
                         color: AppColors.greyColor,
                       ),
-                      border: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor),
-                      ),
+                      border: const UnderlineInputBorder(),
+                      focusedBorder: const UnderlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -116,32 +154,31 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed(AppRoutes.register);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pushNamed(AppRoutes.register);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                              ),
+                              child: const Text('Cadastre-se'),
+                            ),
+                            ElevatedButton(
+                              onPressed: _login, // Chamada do método de login
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.backgroundColor,
+                                foregroundColor: AppColors.menuTextColor,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                              ),
+                              child: const Text('Login'),
+                            ),
+                          ],
                         ),
-                        child: Text('Cadastre-se'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (!_key.currentState!.validate()) return;
-                          Navigator.of(context).pushReplacementNamed(AppRoutes.profile);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.backgroundColor,
-                          foregroundColor: AppColors.menuTextColor,
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                        ),
-                        child: Text('Login'),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
