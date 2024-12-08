@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+
 import 'package:projeto_mobile/screens/login_page.dart';
 import 'package:projeto_mobile/screens/menu_page.dart';
 import 'package:projeto_mobile/settings/routes.dart';
 import 'package:projeto_mobile/repositories/task_repository.dart';
 import 'package:projeto_mobile/models/task.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
-import 'package:hive_flutter/hive_flutter.dart';
+import 'usuario_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +18,7 @@ void main() async {
   await Firebase.initializeApp();
   await Hive.initFlutter();
   Hive.registerAdapter(TaskAdapter());
-  
+
   // Abre a caixa de tarefas no Hive
   var taskBox = await Hive.openBox<Task>('tasks');
   var repository = TaskRepository(taskBox);
@@ -23,11 +26,18 @@ void main() async {
   // Sincroniza dados do Hive com o Firebase
   await repository.syncWithFirebase();
 
-  // Inicia o app
-  runApp(MyApp());
+  // Envolvendo o app com o ChangeNotifierProvider para gerenciar estado
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UsuarioProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,15 +49,15 @@ class MyApp extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasData) {
-            return MenuPage(); // Página inicial para usuários autenticados
+            return const MenuPage(); // Página inicial para usuários autenticados
           } else {
-            return LoginPage(); // Página de login para usuários não autenticados
+            return const LoginPage(); // Página de login para usuários não autenticados
           }
         },
       ),
-      routes: AppRoutes.routes, 
+      routes: AppRoutes.routes,
     );
   }
 }

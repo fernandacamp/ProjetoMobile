@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:projeto_mobile/settings/routes.dart';
+import 'usuario_provider.dart';
 
 class MenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Pegando o usuário atual do provider
+    final usuarioProvider = Provider.of<UsuarioProvider>(context);
+    final usuario = usuarioProvider.usuario;
+
+    // Verifica se o usuário está autenticado
+    if (usuario == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Menu')),
+        body: const Center(child: Text('Usuário não autenticado')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color.fromRGBO(146, 91, 245, 1),
       body: SafeArea(
@@ -16,7 +30,7 @@ class MenuPage extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pop(context); // Ação para fechar o menu
+                    Navigator.pop(context); // Fecha o menu
                   },
                   child: const CircleAvatar(
                     backgroundColor: Colors.white,
@@ -26,17 +40,30 @@ class MenuPage extends StatelessWidget {
               ),
             ),
             // Espaçamento entre o ícone e os itens do menu
-            const SizedBox(height: 50),
+            const SizedBox(height: 20),
+            // Saudação personalizada ao usuário
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Bem-vindo, ${usuario.nome}!',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
 
-            // Itens do menu centralizados
+            // Itens do menu
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _buildMenuItem(
                     context,
                     title: 'New Trip',
+                    route: AppRoutes.newTrip,
                     icon: Icons.add_location_alt,
                     color: Colors.white.withOpacity(0.7),
                   ),
@@ -44,6 +71,7 @@ class MenuPage extends StatelessWidget {
                   _buildMenuItem(
                     context,
                     title: 'Order History',
+                    route: AppRoutes.orderHistory,
                     icon: Icons.history,
                     color: Colors.white.withOpacity(0.7),
                   ),
@@ -51,18 +79,34 @@ class MenuPage extends StatelessWidget {
                   _buildMenuItem(
                     context,
                     title: 'My Profile',
+                    route: AppRoutes.profile,
                     icon: Icons.person,
                     color: Colors.white,
-                    isSelected: true,
                   ),
                   const SizedBox(height: 20),
                   _buildMenuItem(
                     context,
                     title: 'Change Password',
+                    route: AppRoutes.changePassword,
                     icon: Icons.lock,
                     color: Colors.white.withOpacity(0.7),
                   ),
                 ],
+              ),
+            ),
+
+            // Botão de logout
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  usuarioProvider.logout();
+                  Navigator.pushReplacementNamed(context, AppRoutes.login);
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.redAccent,
+                ),
+                child: const Text('Logout'),
               ),
             ),
           ],
@@ -74,28 +118,13 @@ class MenuPage extends StatelessWidget {
   Widget _buildMenuItem(
     BuildContext context, {
     required String title,
+    required String route,
     required IconData icon,
     required Color color,
-    bool isSelected = false,
   }) {
     return GestureDetector(
       onTap: () {
-        switch (title) {
-          case 'New Trip':
-            Navigator.of(context).pushNamed(AppRoutes.newTrip);
-            break;
-          case 'Order History':
-            Navigator.of(context).pushNamed(AppRoutes.orderHistory);
-            break;
-          case 'Meu Perfil':
-            Navigator.of(context).pushNamed(AppRoutes.profile);
-            break;
-          case 'Mudar Senha':
-            Navigator.of(context).pushNamed(AppRoutes.changePassword);
-            break;
-          default:
-            break;
-        }
+        Navigator.of(context).pushNamed(route);
       },
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -111,7 +140,7 @@ class MenuPage extends StatelessWidget {
             style: TextStyle(
               color: color,
               fontSize: 24,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: FontWeight.normal,
             ),
           ),
         ],
