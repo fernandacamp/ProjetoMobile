@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:projeto_mobile/settings/routes.dart';
 import 'usuario_provider.dart';
 
@@ -39,8 +40,8 @@ class MenuPage extends StatelessWidget {
                 ),
               ),
             ),
-            // Espaçamento entre o ícone e os itens do menu
             const SizedBox(height: 20),
+
             // Saudação personalizada ao usuário
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -91,6 +92,18 @@ class MenuPage extends StatelessWidget {
                     icon: Icons.lock,
                     color: Colors.white.withOpacity(0.7),
                   ),
+                  const SizedBox(height: 20),
+                  // Novo botão para gerenciar pets
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PetsPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(primary: Colors.blueAccent),
+                    child: const Text('Gerenciar Pets'),
+                  ),
                 ],
               ),
             ),
@@ -103,9 +116,7 @@ class MenuPage extends StatelessWidget {
                   usuarioProvider.logout();
                   Navigator.pushReplacementNamed(context, AppRoutes.login);
                 },
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.redAccent,
-                ),
+                style: ElevatedButton.styleFrom(primary: Colors.redAccent),
                 child: const Text('Logout'),
               ),
             ),
@@ -115,6 +126,7 @@ class MenuPage extends StatelessWidget {
     );
   }
 
+  // Método para construir os itens do menu
   Widget _buildMenuItem(
     BuildContext context, {
     required String title,
@@ -141,6 +153,86 @@ class MenuPage extends StatelessWidget {
               color: color,
               fontSize: 24,
               fontWeight: FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Página para gerenciar pets
+class PetsPage extends StatelessWidget {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _typeController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Gerenciar Pets')),
+      body: Column(
+        children: [
+          // Formulário para adicionar um novo pet
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Nome do Pet'),
+                ),
+                TextField(
+                  controller: _typeController,
+                  decoration: const InputDecoration(labelText: 'Tipo do Pet'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_nameController.text.isNotEmpty &&
+                        _typeController.text.isNotEmpty) {
+                      await FirebaseFirestore.instance.collection('pets').add({
+                        'name': _nameController.text,
+                        'type': _typeController.text,
+                        'timestamp': FieldValue.serverTimestamp(),
+                      });
+                      _nameController.clear();
+                      _typeController.clear();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Pet adicionado com sucesso!'),
+                      ));
+                    }
+                  },
+                  child: const Text('Adicionar Pet'),
+                ),
+              ],
+            ),
+          ),
+
+          // Exibição em tempo real dos pets
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('pets').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('Nenhum pet encontrado.'));
+                }
+
+                final pets = snapshot.data!.docs;
+
+                return ListView.builder(
+                  itemCount: pets.length,
+                  itemBuilder: (context, index) {
+                    final pet = pets[index].data() as Map<String, dynamic>;
+                    return ListTile(
+                      title: Text(pet['name'] ?? 'Sem nome'),
+                      subtitle: Text('Tipo: ${pet['type'] ?? 'N/A'}'),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],

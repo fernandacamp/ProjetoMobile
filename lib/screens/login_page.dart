@@ -204,3 +204,15 @@ class _LoginPageState extends State<LoginPage> {
           );
   }
 }
+try {
+  final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+    email: emailController.text.trim(),
+    password: passwordController.text.trim(),
+  );
+
+  // Salva o token
+  String token = await userCredential.user!.getIdToken();
+  await saveUserToken(token);
+} catch (e) {
+  print("Erro no login: $e");
+}
