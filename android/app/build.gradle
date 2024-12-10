@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:33.6.0')
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
     implementation 'com.google.firebase:firebase-analytics'  
 }
 
@@ -26,8 +26,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.projetomobile" 
-        minSdk = flutter.minSdkVersion
+        applicationId = "com.example.projeto_mobile" 
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

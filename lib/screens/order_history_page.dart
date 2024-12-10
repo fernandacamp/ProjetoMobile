@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_mobile/blocs/orders/order_bloc.dart';
+import 'package:projeto_mobile/models/order_model.dart';
+import 'package:projeto_mobile/providers/usuario_provider.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/fonts.dart';
-
-import '../repositores/pet_repository.dart';
-import '../settings/routes.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -13,86 +15,109 @@ class OrderHistoryPage extends StatefulWidget {
 }
 
 class _OrderHistoryPageState extends State<OrderHistoryPage> {
-  // Instância do repositório de pets
-  final PetRepository petRepository = PetRepository();
-  
-  // Lista para armazenar os dados dos pets
-  late List<Map<String, dynamic>> allPets;
+  final OrderBloc bloc = OrderBloc();
 
-  // Exemplo de dados de pedidos
-  final List<Map<String, dynamic>> _orderHistory = [
-    {'orderNumber': '001', 'date': '02/11/2024', 'status': 'Entregue'},
-    {'orderNumber': '002', 'date': '28/10/2024', 'status': 'Em trânsito'},
-    {'orderNumber': '003', 'date': '20/10/2024', 'status': 'Cancelado'},
-    {'orderNumber': '004', 'date': '02/11/2024', 'status': 'Entregue'},
-    {'orderNumber': '005', 'date': '28/10/2024', 'status': 'Em trânsito'},
-    {'orderNumber': '006', 'date': '20/10/2024', 'status': 'Cancelado'},
-  ];
+  late Usuario? usuario;
+  late UsuarioProvider usuarioProvider;
+
+  List<OrderModel> _orderHistory = List.empty(growable: true);
 
   @override
   void initState() {
     super.initState();
-    // Carregar todos os pets na lista
-    allPets = petRepository.getAllPets();
   }
 
   @override
   Widget build(BuildContext context) {
+    usuarioProvider = Provider.of<UsuarioProvider>(context);
+    usuario = usuarioProvider.usuario;
+
+    bloc.add(GetOrdersEvent(idUser: usuario!.id));
+
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(
+        leading: const BackButton(
           color: AppColors.menuTextColor,
         ),
         title: Text('Histórico de Pedidos de Pets',
-        style: AppFonts.defaultLarger.copyWith(color: AppColors.menuTextColor)),
+            style: AppFonts.defaultLarger
+                .copyWith(color: AppColors.menuTextColor)),
         centerTitle: true,
         backgroundColor: AppColors.backgroundColor,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: allPets.isEmpty
-            ? Center(
-                child: Text(
-                  'Nenhum pet encontrado.',
-                  style: AppFonts.boldRegular.copyWith(color: AppColors.menuTextColor),
-                ),
-              )
-            : ListView.builder(
-                itemCount: allPets.length, // Alterado para a quantidade de pets
-                itemBuilder: (context, index) {
-                  final pet = allPets[index];
-                  final order = _orderHistory[index]; // Acesso ao histórico de pedidos
-                  return Card(
-                    margin: EdgeInsets.only(bottom: 16),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.purple.shade100,
-                        child: Icon(Icons.pets, color: Colors.purple),
-                      ),
-                      title: Text(
-                        pet['name'], // Exibe o nome do pet
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('Data: ${order['date']}'), // Exibe a data do pedido
-                      trailing: Text(
-                        order['status'], // Exibe o status do pedido
-                        style: TextStyle(
-                          color: order['status'] == 'Entregue'
-                              ? Colors.green
-                              : order['status'] == 'Em trânsito'
-                                  ? Colors.orange
-                                  : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onTap: () {
-                        // Ação ao clicar no pedido (exibir detalhes, por exemplo)
-                      },
+          padding: const EdgeInsets.all(16.0),
+          child: BlocConsumer<OrderBloc, OrderState>(
+              bloc: bloc,
+              listener: (context, state) {
+                if (state is SuccssesGetOrdersState) {
+                  setState(() => _orderHistory = state.model);
+                }
+              },
+              builder: (context, state) {
+                if (state is SuccssesGetOrdersState) {
+                  return _orderHistory.isEmpty
+                      ? Center(
+                          child: Text(
+                            'Nenhum pedido encontrado.',
+                            style: AppFonts.boldRegular
+                                .copyWith(color: AppColors.backgroundColor),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _orderHistory
+                              .length, // Alterado para a quantidade de pets
+                          itemBuilder: (context, index) {
+                            final order = _orderHistory[
+                                index]; // Acesso ao histórico de pedidos
+                            return Card(
+                              margin: EdgeInsets.only(bottom: 16),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.purple.shade100,
+                                  child: Icon(Icons.pets, color: Colors.purple),
+                                ),
+                                title: Text(
+                                  order.petName, // Exibe o nome do pet
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(
+                                    'Data: ${order.date}'), // Exibe a data do pedido
+                                trailing: Text(
+                                  order.orderState, // Exibe o status do pedido
+                                  style: TextStyle(
+                                    color: order.orderState == 'Entregue'
+                                        ? Colors.green
+                                        : order.orderState == 'Em trânsito' ||
+                                                order.orderState == 'Pendente'
+                                            ? Colors.orange
+                                            : Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                onTap: () {
+                                  // Ação ao clicar no pedido (exibir detalhes, por exemplo)
+                                },
+                              ),
+                            );
+                          },
+                        );
+                } else if (state is ErrorGetOrdersState) {
+                  return const Center(
+                    child: Text(
+                      "Erro ao buscar pedidos",
+                      style: AppFonts.boldLarge,
                     ),
                   );
-                },
-              ),
-      ),
+                } else {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.backgroundColor,
+                    ),
+                  );
+                }
+              })),
     );
   }
 }

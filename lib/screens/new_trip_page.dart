@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:projeto_mobile/models/order_model.dart';
+import 'package:projeto_mobile/providers/usuario_provider.dart';
+import 'package:projeto_mobile/services/firestore_service.dart';
 import 'package:projeto_mobile/settings/assets.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:projeto_mobile/settings/routes.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class NewTripPage extends StatefulWidget {
   const NewTripPage({super.key});
@@ -15,8 +20,10 @@ class NewTripPage extends StatefulWidget {
 
 class _NewTripPageState extends State<NewTripPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _departureDateController = TextEditingController();
-  final TextEditingController _departureTimeController = TextEditingController();
+  final TextEditingController _departureDateController =
+      TextEditingController();
+  final TextEditingController _departureTimeController =
+      TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _nomeTutorController = TextEditingController();
   final TextEditingController _especieController = TextEditingController();
@@ -27,6 +34,9 @@ class _NewTripPageState extends State<NewTripPage> {
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _ufController = TextEditingController();
 
+  late Usuario? usuario;
+  late UsuarioProvider usuarioProvider;
+
   String? serviceSelected;
   Map<String, String> services = {
     "Hospedagem": AppAssets.hotelIcon,
@@ -36,12 +46,16 @@ class _NewTripPageState extends State<NewTripPage> {
 
   @override
   Widget build(BuildContext context) {
+    usuarioProvider = Provider.of<UsuarioProvider>(context);
+    usuario = usuarioProvider.usuario;
+
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(color: AppColors.menuTextColor),
         title: Text(
           'Home',
-          style: AppFonts.defaultLarger.copyWith(color: AppColors.menuTextColor),
+          style:
+              AppFonts.defaultLarger.copyWith(color: AppColors.menuTextColor),
         ),
         centerTitle: true,
         backgroundColor: AppColors.backgroundColor,
@@ -49,8 +63,25 @@ class _NewTripPageState extends State<NewTripPage> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             if (_formKey.currentState!.validate()) {
+              var order = OrderModel(
+                  id: const Uuid().v4(),
+                  idUser: usuario!.id,
+                  date: _departureDateController.text,
+                  hour: _departureTimeController.text,
+                  petName: _nomeController.text,
+                  petType: _especieController.text,
+                  tutorName: _nomeTutorController.text,
+                  type: serviceSelected ?? "Hospedagem",
+                  cep: _cepController.text,
+                  address: _addressController.text,
+                  number: int.parse(_numberController.text),
+                  city: _cityController.text,
+                  state: _ufController.text);
+
+              await FirestoreService.addOrder(order);
+
               _showConfirmationDialog(context);
             }
           },
@@ -86,7 +117,8 @@ class _NewTripPageState extends State<NewTripPage> {
                             controller: _departureDateController,
                             decoration: InputDecoration(
                               labelText: 'Data',
-                              labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+                              labelStyle: AppFonts.boldLarge
+                                  .copyWith(color: AppColors.textColor),
                               prefixIcon: Icon(Icons.calendar_today),
                             ),
                             readOnly: true,
@@ -112,7 +144,8 @@ class _NewTripPageState extends State<NewTripPage> {
                             controller: _departureTimeController,
                             decoration: InputDecoration(
                               labelText: 'Horário',
-                              labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+                              labelStyle: AppFonts.boldLarge
+                                  .copyWith(color: AppColors.textColor),
                               prefixIcon: Icon(Icons.access_time),
                             ),
                             readOnly: true,
@@ -229,7 +262,8 @@ class _NewTripPageState extends State<NewTripPage> {
                           controller: _compController,
                           decoration: InputDecoration(
                             labelText: 'Complemento',
-                            labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
+                            labelStyle: AppFonts.boldLarge
+                                .copyWith(color: AppColors.textColor),
                           ),
                         ),
                       ),

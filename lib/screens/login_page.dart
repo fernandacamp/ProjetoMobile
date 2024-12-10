@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:projeto_mobile/services/firestore_service.dart';
 import 'package:projeto_mobile/settings/assets.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/fonts.dart';
 import 'package:projeto_mobile/settings/routes.dart';
 import '../helper/validator_helper.dart';
 import 'package:provider/provider.dart';
-import 'usuario_provider.dart';
+
+import '../providers/usuario_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -34,6 +36,13 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
+      var user = await FirestoreService.getUserbyEmail(_emailController.text);
+
+      var provider = Provider.of<UsuarioProvider>(context, listen: false);
+
+      provider.setUsuario(Usuario(id: user!.id, nome: user.name, email: _emailController.text));
+
       Navigator.of(context).pushReplacementNamed(AppRoutes.menu); // Navegação
     } on FirebaseAuthException catch (e) {
       String message = _handleFirebaseException(e.code);
@@ -43,7 +52,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // Tratamento de erros do Firebase
   String _handleFirebaseException(String code) {
     switch (code) {
       case 'user-not-found':
@@ -55,7 +63,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // Exibir mensagem de erro
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -138,7 +145,8 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       validator: (_) {
         if (_emailController.text.isEmpty) return 'Preencha seu email';
-        if (!ValidatorHelper.validateEmail(_emailController.text)) return 'Email inválido';
+        if (!ValidatorHelper.validateEmail(_emailController.text))
+          return 'Email inválido';
         return null;
       },
       controller: _emailController,
@@ -155,7 +163,8 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       validator: (_) {
         if (_passwordController.text.isEmpty) return 'Preencha sua senha';
-        if (_passwordController.text.length < 8) return 'Senha deve ter mais que 8 caracteres';
+        if (_passwordController.text.length < 8)
+          return 'Senha deve ter mais que 8 caracteres';
         return null;
       },
       controller: _passwordController,
@@ -185,9 +194,11 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.register),
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.register),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 ),
                 child: const Text('Cadastre-se'),
               ),
@@ -196,23 +207,12 @@ class _LoginPageState extends State<LoginPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.backgroundColor,
                   foregroundColor: AppColors.menuTextColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                 ),
                 child: const Text('Login'),
               ),
             ],
           );
   }
-}
-try {
-  final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-    email: emailController.text.trim(),
-    password: passwordController.text.trim(),
-  );
-
-  // Salva o token
-  String token = await userCredential.user!.getIdToken();
-  await saveUserToken(token);
-} catch (e) {
-  print("Erro no login: $e");
 }

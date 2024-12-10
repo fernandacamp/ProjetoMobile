@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive/hive.dart';
-import 'models/task.dart';
+import 'package:projeto_mobile/models/task.dart';
 
 Future<void> syncDataToHive() async {
   final firestore = FirebaseFirestore.instance;
@@ -11,7 +11,7 @@ Future<void> syncDataToHive() async {
     final data = doc.data();
     final task = Task(
       id: doc.id,
-      description: data['description'],
+      title: data['description'],
     );
     taskBox.put(doc.id, task); // Salva no Hive
   }

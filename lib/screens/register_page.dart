@@ -1,9 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:projeto_mobile/helper/validator_helper.dart';
+import 'package:projeto_mobile/models/usuario_model.dart';
+import 'package:projeto_mobile/services/firestore_service.dart';
 import 'package:projeto_mobile/settings/assets.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/fonts.dart';
 import 'package:projeto_mobile/settings/routes.dart';
+import 'package:uuid/uuid.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,9 +20,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final GlobalKey<FormState> _key = GlobalKey<FormState>();
+
   bool _obscurePassword = true;
+  bool _isLoading = false;
   bool _acceptedTerms = false;
 
   @override
@@ -175,7 +182,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -198,16 +205,14 @@ class _RegisterPageState extends State<RegisterPage> {
                               return;
                             }
                             if (_key.currentState!.validate()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Cadastro realizado com sucesso!'),
-                                ),
-                              );
-                              Navigator.of(context).pop();
+                              _register();
                             }
                           },
-                          child: const Text('Cadastre-se'),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text('Cadastre-se'),
                         ),
                       ],
                     ),
@@ -217,6 +222,63 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _register() async {
+    if (!_key.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      await FirestoreService.addUser(UserModel(
+          id: const Uuid().v4(),
+          name: _userNameController.text,
+          email: _emailController.text));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cadastro realizado com sucesso!'),
+        ),
+      );
+      Navigator.of(context).pop();
+    } on FirebaseAuthException catch (e) {
+      String message = _handleFirebaseException(e.code);
+      _showErrorDialog(message);
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  String _handleFirebaseException(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'Usuário não encontrado.';
+      case 'wrong-password':
+        return 'Senha incorreta.';
+      default:
+        return 'Ocorreu um erro. Tente novamente.';
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Erro'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }

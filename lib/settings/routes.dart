@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:projeto_mobile/screens/new_trip_page.dart';
+import '../screens/change_password.dart';
 import '../screens/login_page.dart';
 import '../screens/menu_page.dart';
 import '../screens/order_history_page.dart';
 import '../screens/profile_page.dart';
 import '../screens/register_page.dart';
-import '../screens/change_password_page.dart'; 
 import '../services/auth_service.dart';
 
 class AppRoutes {

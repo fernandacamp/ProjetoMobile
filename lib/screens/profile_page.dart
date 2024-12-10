@@ -1,10 +1,21 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:projeto_mobile/providers/usuario_provider.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/routes.dart';
+import 'package:provider/provider.dart';
 
 class ProfilePage extends StatelessWidget {
+
+  late Usuario? usuario;
+  late UsuarioProvider usuarioProvider;
+
   @override
   Widget build(BuildContext context) {
+    usuarioProvider = Provider.of<UsuarioProvider>(context);
+    usuario = usuarioProvider.usuario;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -25,16 +36,16 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Foto de perfil e nome do usuário
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             CircleAvatar(
               radius: 50,
               backgroundColor: Colors.purple.shade100,
               child: Icon(Icons.person,
                   size: 60, color: Color.fromRGBO(146, 91, 245, 1)),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
-              'Karim Santel',
+              usuario?.nome ?? "",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -42,18 +53,20 @@ class ProfilePage extends StatelessWidget {
               ),
             ),
             Text(
-              '0167873902',
+              usuario?.email ?? "",
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
 
             _buildSettingsOption(
               icon: Icons.logout,
               title: 'Sair',
-              onTap: () {
+              onTap: () async {
+                usuarioProvider.logout();
+                FirebaseAuth.instance.signOut();
                 Navigator.of(context).pushReplacementNamed(AppRoutes.login);
               },
             ),

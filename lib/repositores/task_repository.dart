@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive/hive.dart';
-import 'task.dart';
+import 'package:projeto_mobile/models/task.dart';
 
 class TaskRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
