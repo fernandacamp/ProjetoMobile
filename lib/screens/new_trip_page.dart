@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:projeto_mobile/models/order_model.dart';
 import 'package:projeto_mobile/providers/usuario_provider.dart';
 import 'package:projeto_mobile/services/firestore_service.dart';
+import 'package:projeto_mobile/services/cep_service.dart';
 import 'package:projeto_mobile/settings/assets.dart';
 import 'package:projeto_mobile/settings/color.dart';
 import 'package:projeto_mobile/settings/fonts.dart';
@@ -20,10 +21,8 @@ class NewTripPage extends StatefulWidget {
 
 class _NewTripPageState extends State<NewTripPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _departureDateController =
-      TextEditingController();
-  final TextEditingController _departureTimeController =
-      TextEditingController();
+  final TextEditingController _departureDateController = TextEditingController();
+  final TextEditingController _departureTimeController = TextEditingController();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _nomeTutorController = TextEditingController();
   final TextEditingController _especieController = TextEditingController();
@@ -45,6 +44,40 @@ class _NewTripPageState extends State<NewTripPage> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _cepController.addListener(_onCepChanged);
+  }
+
+  @override
+  void dispose() {
+    _cepController.removeListener(_onCepChanged);
+    super.dispose();
+  }
+
+  void _onCepChanged() {
+    if (_cepController.text.length == 8) {
+      fetchAddress();
+    }
+  }
+
+  Future<void> fetchAddress() async {
+    final cep = _cepController.text.replaceAll(RegExp(r'[^0-9]'), ''); // Apenas números
+    if (cep.length == 8) {
+      final address = await CepService.getAddress(cep);
+      if (address != null) {
+        setState(() {
+          _addressController.text = address['logradouro'] ?? '';
+          _cityController.text = address['localidade'] ?? '';
+          _ufController.text = address['uf'] ?? '';
+        });
+      } else {
+        print("CEP inválido");
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     usuarioProvider = Provider.of<UsuarioProvider>(context);
     usuario = usuarioProvider.usuario;
@@ -54,8 +87,7 @@ class _NewTripPageState extends State<NewTripPage> {
         leading: BackButton(color: AppColors.menuTextColor),
         title: Text(
           'Home',
-          style:
-              AppFonts.defaultLarger.copyWith(color: AppColors.menuTextColor),
+          style: AppFonts.defaultLarger.copyWith(color: AppColors.menuTextColor),
         ),
         centerTitle: true,
         backgroundColor: AppColors.backgroundColor,
@@ -117,8 +149,7 @@ class _NewTripPageState extends State<NewTripPage> {
                             controller: _departureDateController,
                             decoration: InputDecoration(
                               labelText: 'Data',
-                              labelStyle: AppFonts.boldLarge
-                                  .copyWith(color: AppColors.textColor),
+                              labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
                               prefixIcon: Icon(Icons.calendar_today),
                             ),
                             readOnly: true,
@@ -144,8 +175,7 @@ class _NewTripPageState extends State<NewTripPage> {
                             controller: _departureTimeController,
                             decoration: InputDecoration(
                               labelText: 'Horário',
-                              labelStyle: AppFonts.boldLarge
-                                  .copyWith(color: AppColors.textColor),
+                              labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
                               prefixIcon: Icon(Icons.access_time),
                             ),
                             readOnly: true,
@@ -262,8 +292,7 @@ class _NewTripPageState extends State<NewTripPage> {
                           controller: _compController,
                           decoration: InputDecoration(
                             labelText: 'Complemento',
-                            labelStyle: AppFonts.boldLarge
-                                .copyWith(color: AppColors.textColor),
+                            labelStyle: AppFonts.boldLarge.copyWith(color: AppColors.textColor),
                           ),
                         ),
                       ),
