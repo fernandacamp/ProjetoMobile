@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -12,6 +11,7 @@ class AuthService {
         email: email,
         password: password,
       );
+      await saveUserToken(userCredential.user?.uid ?? '');
       return userCredential.user;
     } catch (e) {
       print('Erro ao registrar usuário: $e');
@@ -26,6 +26,7 @@ class AuthService {
         email: email,
         password: password,
       );
+      await saveUserToken(userCredential.user?.uid ?? '');
       return userCredential.user;
     } catch (e) {
       print('Erro ao fazer login: $e');
@@ -36,16 +37,27 @@ class AuthService {
   // Logout do usuário
   Future<void> logoutUser() async {
     await _auth.signOut();
+    await clearUserToken();
   }
 
   // Verificar se há usuário autenticado
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-}
-Future<void> saveUserToken(String token) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('user_token', token);
-}
-Future<String?> getUserToken() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('user_token');
+
+  // Salvar token do usuário
+  Future<void> saveUserToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_token', token);
+  }
+
+  // Obter token do usuário
+  Future<String?> getUserToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_token');
+  }
+
+  // Remover token do usuário ao deslogar
+  Future<void> clearUserToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_token');
+  }
 }

@@ -10,7 +10,10 @@ import 'package:projeto_mobile/screens/login_page.dart';
 import 'package:projeto_mobile/screens/menu_page.dart';
 import 'package:projeto_mobile/settings/routes.dart';
 import 'package:projeto_mobile/models/task.dart';
-import 'services/network_service.dart';
+import 'package:projeto_mobile/services/network_service.dart';
+import 'package:projeto_mobile/services/cep_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,23 +59,15 @@ Future<void> main() async {
 // Sincroniza dados do Firestore com o Hive
 Future<void> syncDataToHive() async {
   try {
-    // Obter instância do Firebase Firestore
     final firestore = FirebaseFirestore.instance;
-
-    // Acessar a coleção de tarefas
     final querySnapshot = await firestore.collection('tasks').get();
-
-    // Abrir ou criar a caixa do Hive
     final taskBox = await Hive.openBox<Task>('tasks');
 
-    // Percorrer documentos do Firestore e salvar no Hive
     for (var doc in querySnapshot.docs) {
       final task = Task(
         id: doc.id,
         title: doc['title'] ?? 'Descrição não fornecida',
       );
-
-      // Salvar no Hive usando o ID do Firestore como chave
       taskBox.put(doc.id, task);
     }
 
@@ -82,28 +77,24 @@ Future<void> syncDataToHive() async {
   }
 }
 
-// Classe principal do aplicativo
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    //FirebaseAuth.instance.signOut();
-
     return MaterialApp(
       title: 'Pet Transporte',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.purple),
-      // Define a navegação inicial com base no estado do usuário
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasData) {
-            return MenuPage(); // Página inicial para usuários autenticados
+            return MenuPage();
           } else {
-            return const LoginPage(); // Página de login para usuários não autenticados
+            return const LoginPage();
           }
         },
       ),
