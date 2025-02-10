@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:projeto_mobile/models/order_model.dart';
@@ -76,11 +77,19 @@ class _NewTripPageState extends State<NewTripPage> {
                   type: serviceSelected ?? "Hospedagem",
                   cep: _cepController.text,
                   address: _addressController.text,
-                  number: int.parse(_numberController.text),
+                  number: 89,
                   city: _cityController.text,
                   state: _ufController.text);
 
-              await FirestoreService.addOrder(order);
+              try {
+                await FirestoreService.addOrder(order);
+              } on FirebaseException catch (e) {
+                // Tratamento específico para erros do Firebase
+                print('Erro do Firebase: ${e.message}');
+              } catch (e) {
+                // Tratamento genérico para outras exceções
+                print('Erro desconhecido: $e');
+              }
 
               _showConfirmationDialog(context);
             }
