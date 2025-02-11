@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:projeto_mobile/models/order_model.dart';
 import 'package:projeto_mobile/providers/usuario_provider.dart';
 import 'package:projeto_mobile/services/firestore_service.dart';
@@ -36,6 +38,8 @@ class _NewTripPageState extends State<NewTripPage> {
 
   late Usuario? usuario;
   late UsuarioProvider usuarioProvider;
+
+  bool loading = false;
 
   String? serviceSelected;
   Map<String, String> services = {
@@ -270,11 +274,40 @@ class _NewTripPageState extends State<NewTripPage> {
                   }).toList(),
                 ),
                 const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _cepController,
-                  label: 'CEP',
-                  keyboardType: TextInputType.number,
-                  validatorMessage: 'O CEP é obrigatório',
+
+                LayoutBuilder(
+                  builder: (context, constrains) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: constrains.maxWidth - 100,
+                          child: _buildTextField(
+                            controller: _cepController,
+                            label: 'CEP',
+                            keyboardType: TextInputType.number,
+                            validatorMessage: 'O CEP é obrigatório',
+                          ),
+                        ),
+
+                        ElevatedButton(
+                          onPressed: () => _obterLocalizacaoAtual(),
+                          child: loading ? CircularProgressIndicator(color: AppColors.backgroundColor,) : const Icon(Icons.location_on_sharp, color: AppColors.backgroundColor,),
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 0, vertical: 15),
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            side: BorderSide(color: AppColors.backgroundColor),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        )
+                      ],
+                    );
+                  }
                 ),
                 const SizedBox(height: 20),
                 _buildDisabledTextField(
@@ -417,5 +450,45 @@ class _NewTripPageState extends State<NewTripPage> {
         );
       },
     );
+  }
+
+  _obterLocalizacaoAtual() async {
+    setState(() => loading = true);
+    LocationPermission permission;
+    permission = await Geolocator.requestPermission();
+
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      final snackBar = SnackBar(
+        content: Text('Permissão de localização é necessária'),
+        duration: Duration(seconds: 2),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+
+      Placemark place = placemarks[0];
+
+      setState(() {
+        _addressController.text = place.street ?? "";
+        _numberController.text = place.subThoroughfare ?? "";
+        _cityController.text = place.subAdministrativeArea ?? "";
+        _ufController.text = place.administrativeArea ?? "";
+        _cepController.text = place.postalCode ?? "";
+        loading = false;
+      });
+    } catch (e) {
+      final snackBar = SnackBar(
+        content: Text('Erro: $e'),
+        duration: Duration(seconds: 2),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
   }
 }
