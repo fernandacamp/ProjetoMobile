@@ -5,23 +5,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:projeto_mobile/providers/usuario_provider.dart';
 import 'package:projeto_mobile/repositores/task_repository.dart';
-import 'package:projeto_mobile/services/firebase_messaging_service.dart';
-import 'package:projeto_mobile/services/notification_service.dart';
 import 'package:provider/provider.dart';
 import 'package:projeto_mobile/screens/login_page.dart';
 import 'package:projeto_mobile/screens/menu_page.dart';
 import 'package:projeto_mobile/settings/routes.dart';
 import 'package:projeto_mobile/models/task.dart';
 import 'package:projeto_mobile/services/network_service.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-
-
+import 'package:projeto_mobile/services/cep_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa Firebase
   await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(FirebaseMessagingService.firebaseMessagingBackgroundHandler);
-  FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+
+  // Configura o Firestore para persistência offline
+  FirebaseFirestore.instance.settings =
+      const Settings(persistenceEnabled: true);
 
   // Inicializa o Hive
   await Hive.initFlutter();
@@ -54,13 +56,6 @@ Future<void> main() async {
   );
 }
 
-void getToken() async {
-  String? token = await FirebaseMessaging.instance.getToken();
-  print("Token do dispositivo: $token");
-}
-
-
-
 // Sincroniza dados do Firestore com o Hive
 Future<void> syncDataToHive() async {
   try {
@@ -82,26 +77,8 @@ Future<void> syncDataToHive() async {
   }
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-
-  @override
-  void initState() {
-    super.initState();
-    FirebaseMessagingService.setupFirebaseMessaging();
-    FirebaseMessagingService.getToken();
-    setupNotifications();
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("📩 Notificação recebida enquanto o app está aberto!");
-      showNotification(message);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +99,6 @@ class _MyAppState extends State<MyApp> {
         },
       ),
       routes: AppRoutes.routes,
-      navigatorKey: AppRoutes.navigatorKey,
     );
   }
 }

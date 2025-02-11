@@ -9,9 +9,6 @@ import '../screens/register_page.dart';
 import '../services/auth_service.dart';
 
 class AppRoutes {
-
-  static GlobalKey<NavigatorState>? navigatorKey = GlobalKey<NavigatorState>();
-
   // Rotas estáticas
   static const String newTrip = "/new_trip";
   static const String login = "/login";
